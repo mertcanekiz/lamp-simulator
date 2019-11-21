@@ -11,7 +11,6 @@
 #include <stm32f0xx.h>
 
 void LEDToggle(uint16_t delay);
-void LEDOff();
 void Delay(__IO uint32_t nTime);
 void TimingDelay_Decrement(void);
 
@@ -35,11 +34,13 @@ static __IO uint32_t TimingDelay;
 
 int main(void)
 {
+    SysTick_Config(SystemCoreClock / 1000);
     STM_EVAL_LEDInit(LED3);
     STM_EVAL_LEDInit(LED4);
     STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_GPIO);
+    STM_EVAL_LEDOff(LED3);
+    STM_EVAL_LEDOff(LED4);
 
-    LEDOff();
 
     while (1)
     {
@@ -47,13 +48,8 @@ int main(void)
         {
             case STATE_RED_A:
             case STATE_RED_B:
-                if (timer < RESET_DELAY) {
-                    STM_EVAL_LEDOff(LED3);
-                    STM_EVAL_LEDOn(LED4);
-                } else {
-                    STM_EVAL_LEDOff(LED4);
-                    STM_EVAL_LEDOn(LED3);
-                }
+                STM_EVAL_LEDOff(LED3);
+                STM_EVAL_LEDOn(LED4);
                 timer++;
                 break;
             case STATE_LOW_A:
@@ -64,10 +60,12 @@ int main(void)
             case STATE_HIGH_A:
             case STATE_HIGH_B:
                 LEDToggle(100);
+                timer++; // This isn't technically needed.
                 break;
             case STATE_OFF_A:
             case STATE_OFF_B:
-                LEDOff();
+                STM_EVAL_LEDOff(LED3);
+                STM_EVAL_LEDOff(LED4);
                 break;
             default:
                 state = FIRST_STATE;
@@ -87,12 +85,12 @@ int main(void)
                 continue;
             }
             if (state == STATE_RED_B) {
-                LEDOff(); // Toggle LEDs off when switching from blue to green
+                STM_EVAL_LEDOff(LED4);
             }
             state++;
             timer = 0;
         }
-        Delay(5);
+        Delay(1);
     }
 }
 
@@ -104,18 +102,10 @@ void LEDToggle(uint16_t delay)
     }
 }
 
-void LEDOff()
-{
-    STM_EVAL_LEDOff(LED3);
-    STM_EVAL_LEDOff(LED4);
-}
-
 void Delay(__IO uint32_t nTime)
 {
-    TimingDelay = nTime * 200; // This 2000 value is arbitrary and roughly eyeballed;
-                                // The code needs a better delay implementation.
-    while (TimingDelay != 0)
-        TimingDelay_Decrement();
+    TimingDelay = nTime;
+    while (TimingDelay != 0);
 }
 
 void TimingDelay_Decrement(void)
