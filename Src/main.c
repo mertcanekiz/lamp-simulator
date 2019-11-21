@@ -10,10 +10,6 @@
 #include "main.h"
 #include <stm32f0xx.h>
 
-void LEDToggle(uint16_t delay);
-void Delay(__IO uint32_t nTime);
-void TimingDelay_Decrement(void);
-
 #define RESET_DELAY 3000 
 #define FIRST_STATE 0
 typedef enum {
